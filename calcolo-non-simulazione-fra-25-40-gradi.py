@@ -15,7 +15,7 @@ warnings.filterwarnings(action='ignore', module='pvfactors')
 # --- PARAMETRI DI SIMULAZIONE E LUOGO ---
 
 # Periodo di simulazione: Un anno intero
-times = pd.date_range('2021-01-01', '2022-01-01', freq='1H', tz='Europe/Rome', inclusive='left')
+times = pd.date_range('2021-01-01', '2022-01-01', freq='1h', tz='Europe/Rome', inclusive='left')
 
 loc = location.Location(latitude=45.12, longitude=9.21, tz=times.tz)
 sp = loc.get_solarposition(times)
@@ -28,12 +28,15 @@ pitch = 5
 gcr = pvrow_width / pitch
 axis_azimuth = 180 # Orientamento dell'asse di rotazione, 90 gradi rispetto a surface_azimuth per fisso
 surface_azimuth = 180 # Orientamento dei moduli: Sud
-albedo = 0.2
+albedo = 0.6
 
 # --- PARAMETRI DEL SISTEMA PV PER IL CALCOLO DELLA PRODUZIONE ---
-system_total_area_front_side_m2 = 50.0 * 3.75 # Area totale frontale attiva di tutti i moduli PV del tuo impianto in m^2.
-module_efficiency = 0.22                # Efficienza complessiva del modulo (es. 20% = 0.20)
-bifaciality_factor = 0.60               # Fattore di bifacialità (es. 0.70 significa che la parte posteriore è efficace al 70% rispetto a quella anteriore)
+system_total_area_front_side_m2 = 1.134 * 2.382 * 16 # Area totale frontale attiva di tutti i moduli PV del tuo impianto in m^2.
+                                                     # area occupata da 16 pannelli ja solar bifacciali https://www.jasolar.com/statics/gaiban/pdfh5/pdf.html?file=https://www.jasolar.com/uploadfile/fujian/2024/1120/25f25cb57ef66.pdf
+                                                     # 9360 watt installati
+module_efficiency = 0.26                # Efficienza complessiva del modulo (es. 20% = 0.20)
+bifaciality_factor = 0.80               # Fattore di bifacialità (es. 0.70 significa che la parte posteriore è efficace al 70% rispetto a quella anteriore)
+                                        # gli ja solar hanno bifaccialità 80%
 
 # Intervallo di tempo in ore (freq='1H' significa 1 ora)
 time_interval_hours = (times[1] - times[0]).total_seconds() / 3600
@@ -103,11 +106,16 @@ print("\n--- Simulazioni completate! ---")
 
 results_df = pd.DataFrame(annual_production_results)
 
+# Calcolo della potenza installata nominale (kWp)
+nominal_installed_power_wp = system_total_area_front_side_m2 * 1000 * module_efficiency
+nominal_installed_power_kwp = nominal_installed_power_wp / 1000
+
 print("\n--- Riepilogo dei Parametri del Sistema ---")
 print(f"Area totale del sistema (frontale): {system_total_area_front_side_m2} m^2")
 print(f"Efficienza del modulo: {module_efficiency*100:.1f}%")
 print(f"Fattore di bifacialità: {bifaciality_factor:.2f}")
 print(f"Periodo di simulazione: 1 anno ({len(times)} ore)")
+print(f"Potenza Nominale Installata: {nominal_installed_power_kwp:.2f} kWp") # Aggiungi questa riga
 
 print("\n--- Produzione Annuale Totale per Angolo di Tilt (kWh) ---")
 display(results_df.round(2)) # Arrotonda per una migliore leggibilità
